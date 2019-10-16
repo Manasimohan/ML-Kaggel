@@ -56,8 +56,15 @@ def target_encode(trn_series,tst_series,target):
     ft_tst_series.index = tst_series.index
     return add_noise(ft_trn_series, noise_level), add_noise(ft_tst_series, noise_level)
 
-#Read csv file into dataframe Maindf
-Maindf = pd.read_csv('C:/Semester 1/Machine Learning/K/tcd ml 2019-20 income prediction training (with labels).csv', na_values = {
+df = pd.read_csv('C:/Semester 1/Machine Learning/K/tcd ml 2019-20 income prediction training (with labels).csv', na_values = {
+    'Year of Record': ["#NA"],
+    'Gender': ["#NA","0","unknown"],
+    'Age': ["#NA"],
+    'Profession':["#NA"],
+    'University Degree' : ["0","#NA"],
+    'Hair Color': ["#NA","0","Unknown"]
+ } )
+dftest = pd.read_csv('C:/Semester 1/Machine Learning/K/tcd ml 2019-20 income prediction test (without labels).csv', na_values = {
     'Year of Record': ["#NA"],
     'Gender': ["#NA","0","unknown"],
     'Age': ["#NA"],
@@ -66,164 +73,70 @@ Maindf = pd.read_csv('C:/Semester 1/Machine Learning/K/tcd ml 2019-20 income pre
     'Hair Color': ["#NA","0","Unknown"]
  } )
 
-#Maindf.to_csv('testcleaned-data.csv')
+df['Year of Record'].fillna(df['Year of Record'].interpolate(method='slinear'), inplace=True)
+df['Gender'].fillna('other', inplace=True)
+df['Age'].fillna(df['Age'].interpolate(method='slinear'), inplace=True)
+df['Gender'].fillna(method="ffill", inplace=True)
+df['Profession'].fillna(method="ffill", inplace=True)
+df['University Degree'].fillna(method="ffill", inplace=True)
+df['Hair Color'].fillna(method="ffill", inplace=True)
+dftest['Year of Record'].fillna(dftest['Year of Record'].interpolate(method='slinear'), inplace=True)
+dftest['Gender'].fillna('other', inplace=True)
+dftest['Age'].fillna(dftest['Age'].interpolate(method='slinear'), inplace=True)
+dftest['Gender'].fillna(method="ffill", inplace=True)
+dftest['Profession'].fillna(method="ffill", inplace=True)
+dftest['University Degree'].fillna(method="ffill", inplace=True)
+dftest['Hair Color'].fillna(method="ffill", inplace=True)
 
-#reading the test data
-Testdf = pd.read_csv('C:/Semester 1/Machine Learning/K/tcd ml 2019-20 income prediction test (without labels).csv', na_values = {
-    'Year of Record': ["#NA"],
-    'Gender': ["#NA","0","unknown"],
-    'Age': ["#NA"],
-    'Profession':["#NA"],
-    'University Degree' : ["0","#NA"],
-    'Hair Color': ["#NA","0","Unknown"]
- } )
+scale_age = pp.StandardScaler()
+df['Age'] = scale_age.fit_transform(df['Age'].values.reshape(-1, 1))
+dftest['Age'] = scale_age.transform(dftest['Age'].values.reshape(-1, 1))
+scale_year = pp.StandardScaler()
+df['Year of Record'] = scale_year.fit_transform(df['Year of Record'].values.reshape(-1, 1))
+dftest['Year of Record'] = scale_year.transform(dftest['Year of Record'].values.reshape(-1, 1))
 
-#Testdf.to_csv('testcleaned-testdata.csv')
+Var = df['Income in EUR']
+Var = Var.abs()
+df = df.drop(columns=['Income in EUR'])
 
-#Identifying and filling missing values for the features
-Maindf['Year of Record'].fillna(Maindf['Year of Record'].interpolate(method='slinear'), inplace=True)
-Maindf['Gender'].fillna('other', inplace=True)
-Maindf['Age'].fillna(Maindf['Age'].interpolate(method='slinear'), inplace=True)
-Maindf['Gender'].fillna(method="ffill", inplace=True)
-Maindf['Profession'].fillna(method="ffill", inplace=True)
-Maindf['University Degree'].fillna(method="ffill", inplace=True)
-Maindf['Hair Color'].fillna(method="ffill", inplace=True)
-
-#Maindf.to_csv('testfilled-data.csv')
-
-#Identifying and filling missing values for the features in test data
-Testdf['Year of Record'].fillna(Testdf['Year of Record'].interpolate(method='slinear'), inplace=True)
-Testdf['Gender'].fillna('other', inplace=True)
-Testdf['Age'].fillna(Testdf['Age'].interpolate(method='slinear'), inplace=True)
-Testdf['Gender'].fillna(method="ffill", inplace=True)
-Testdf['Profession'].fillna(method="ffill", inplace=True)
-Testdf['University Degree'].fillna(method="ffill", inplace=True)
-Testdf['Hair Color'].fillna(method="ffill", inplace=True)
-
-#Testdf.to_csv('testfilled-testdata.csv')
-
-# #SCaling features - Age and Year of Record
-# age_scaler = pp.StandardScaler()
-# Maindf['Age'] = age_scaler.fit_transform(Maindf['Age'].values.reshape(-1, 1))
-
-# yor_scaler = pp.StandardScaler()
-# Maindf['Year of Record'] = yor_scaler.fit_transform(Maindf['Year of Record'].values.reshape(-1, 1))
-
-# Maindf.to_csv('testscaled-data.csv')
-
-#SCaling features - Age and Year of Record of test data
-# Testdf['Age'] = age_scaler.transform(Testdf['Age'].values.reshape(-1, 1))
-# Testdf['Year of Record'] = yor_scaler.transform(Testdf['Year of Record'].values.reshape(-1, 1))
-
-# Testdf.to_csv('testscaled-testdata.csv')
-
-#Label encoding for feature Gender for training data
-# le_Gender = pp.LabelEncoder() 
-# Maindf['Gender'] = le_Gender.fit_transform(Maindf['Gender']) 
-# Maindf['Gender'].unique()
-
-
-# #Label encoding for feature University Degree for training data
-# le_UniDeg = pp.LabelEncoder()
-# Maindf['University Degree'] = le_UniDeg.fit_transform(Maindf['University Degree']) 
-# Maindf['University Degree'].unique()
-
-
-# #Label encoding for feature Hair Color for training data
-# le_HairClr = pp.LabelEncoder()
-# Maindf['Hair Color'] = le_HairClr.fit_transform(Maindf['Hair Color']) 
-# Maindf['Hair Color'].unique()
-
-
-#Removed the feature Income in EUR from data frame and equated to Y
-Y = Maindf['Income in EUR']
-Y = Y.abs()
-#print
-Maindf = Maindf.drop(columns=['Income in EUR'])
-#print(Maindf.head())
-
-# #Label encoding for feature Profession of training data
-professionList = Maindf['Profession'].unique()
-professionReplaced = Maindf.groupby('Profession').count()
+professionList = df['Profession'].unique()
+professionReplaced = df.groupby('Profession').count()
 professionReplaced = professionReplaced[professionReplaced['Age'] < 3].index
-Maindf['Profession'].replace(professionReplaced, 'other profession', inplace=True)
-
-# le_Prof = pp.LabelEncoder()
-# Maindf['Profession'] = le_Prof.fit_transform(Maindf['Profession']) 
-# Maindf['Profession'].unique()
-
-
-# #Label encoding for feature Country of training data
-countryList = Maindf['Country'].unique()
-countryReplaced = Maindf.groupby('Country').count()
+df['Profession'].replace(professionReplaced, 'other profession', inplace=True)
+countryList = df['Country'].unique()
+countryReplaced = df.groupby('Country').count()
 countryReplaced = countryReplaced[countryReplaced['Age'] < 3].index
-Maindf['Country'].replace(countryReplaced, 'other', inplace=True)
+df['Country'].replace(countryReplaced, 'other', inplace=True)
 
-# le_Country = pp.LabelEncoder()
-# Maindf['Country'] = le_Country.fit_transform(Maindf['Country']) 
-# Maindf['Country'].unique()
+Var1 = dftest['Income']
+dftest = dftest.drop(columns=['Income'])
 
-# pd.DataFrame(Maindf).head().to_csv('testasdf.csv')
-
-
-# #Label encoding for feature Gender of test data
-# Testdf['Gender'] = le_Gender.transform(Testdf['Gender']) 
-
-# #Label encoding for feature University Degree of test data
-# Testdf['University Degree'] = le_UniDeg.transform(Testdf['University Degree']) 
-
-# # #Label encoding for feature Hair Color of test data
-# Testdf['Hair Color'] = le_HairClr.transform(Testdf['Hair Color']) 
-
-
-#Removed the feature Income in EUR from data frame and equated to Y
-Y1 = Testdf['Income']
-#print
-Testdf = Testdf.drop(columns=['Income'])
-#print(Testdf.head())
-
-# Label encoding for feature Profession of test data
-testProfessionList = Testdf['Profession'].unique()
+testProfessionList = dftest['Profession'].unique()
 encodedProfession = list(set(professionList) - set(professionReplaced))
 testProfessionReplace = list(set(testProfessionList) - set(encodedProfession))
-Testdf['Profession'] = Testdf['Profession'].replace(testProfessionReplace, 'other profession')
-
-#Testdf['Profession'] = le_Prof.transform(Testdf['Profession']) 
-
-#Label encoding for feature Country of test data
-testCountryList = Testdf['Country'].unique()
+dftest['Profession'] = dftest['Profession'].replace(testProfessionReplace, 'other profession')
+testCountryList = dftest['Country'].unique()
 encodedCountries = list(set(countryList) - set(countryReplaced))
 testCountryReplace = list(set(testCountryList) - set(encodedCountries))
-Testdf['Country'] = Testdf['Country'].replace(testCountryReplace, 'other')
+dftest['Country'] = dftest['Country'].replace(testCountryReplace, 'other')
+df['Gender'],dftest['Gender']=target_encode(df['Gender'],dftest['Gender'],Var)
+df['University Degree'],dftest['University Degree']=target_encode(df['University Degree'],dftest['University Degree'],Var)
+df['Hair Color'],dftest['Hair Color']=target_encode(df['Hair Color'],dftest['Hair Color'],Var)
+df['Profession'],dftest['Profession']=target_encode(df['Profession'],dftest['Profession'],Var)
+df['Country'],dftest['Country']=target_encode(df['Country'],dftest['Country'],Var)
 
-#Testdf['Country'] = le_Country.transform(Testdf['Country']) 
-
-Maindf['Gender'],Testdf['Gender']=target_encode(Maindf['Gender'],Testdf['Gender'],Y)
-Maindf['University Degree'],Testdf['University Degree']=target_encode(Maindf['University Degree'],Testdf['University Degree'],Y)
-Maindf['Hair Color'],Testdf['Hair Color']=target_encode(Maindf['Hair Color'],Testdf['Hair Color'],Y)
-Maindf['Profession'],Testdf['Profession']=target_encode(Maindf['Profession'],Testdf['Profession'],Y)
-Maindf['Country'],Testdf['Country']=target_encode(Maindf['Country'],Testdf['Country'],Y)
-
-# Training the DATA
-X_train, X_test, y_train, y_test = train_test_split(Maindf, Y, test_size=0.2, random_state=0)
-
+X_train, X_test, y_train, y_test = train_test_split(df, Var, test_size=0.2, random_state=0)
 regressor = RandomForestRegressor(n_estimators = 100, random_state = 42)  
 regressor.fit(X_train, y_train) #training the algorithm
-
 y_pred = regressor.predict(X_test)
 
 print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))  
 print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))  
 print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
-
-Instance = Testdf['Instance']
+Instance = dftest['Instance']
 Instance = pd.DataFrame(Instance, columns=['Instance'])
-#del Testdf['Instance']
-
-y_pred1 = regressor.predict(Testdf)
-
+y_pred1 = regressor.predict(dftest)
 Income = pd.DataFrame(y_pred1,columns=['Income'])
-
 file = Instance.join(Income)
 file.to_csv('results.csv',index=False)
 
